@@ -20,6 +20,30 @@ module Djikstra
     ready,
     hold,
 
-    output [255:0] sp [0:15],
-    output valid_out
+    output reg [255:0] sp [0:15],
+    output reg valid_out
 );
+    reg [3:0] hp [0:15];
+    reg [3:0] len;
+    reg [31:0] state;
+    reg [3:0] nn;
+    reg [7:0] ee;
+    reg [11:0] inp [0:255];
+    always @(posedge clk or reset==1'b0)
+    begin
+        if (reset==1'b0) begin          //reset
+            hp [0:15] <=0;
+            valid_out<=1'b0;
+            sp [0:15]<=0;
+            len<=0;
+            state<=0;
+        end
+        else begin
+            if(state==0) begin
+                nn<=n;
+                ee<=e;
+                inp<=data;
+            end
+        end 
+    end    
+endmodule
