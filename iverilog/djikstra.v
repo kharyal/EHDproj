@@ -8,7 +8,7 @@
                 12 bit * 256 data units
                 [0:3] contain parent node
                 [4:7] contain child node
-                [7:11] contain weight of edge from parent to child
+                [8:11] contain weight of edge from parent to child
     output sp:
                 output reg [255:0] sp [0:15],
                 16 bits * 256 data units
@@ -35,6 +35,9 @@ module Djikstra
     reg [3:0] nn;            //number of nodes
     reg [7:0] ee;            //number of edges
     reg [11:0] inp [0:255];  // this is input
+    reg [3:0] connected [0:15]; 
+    reg [3:0] weights [0:15];
+    reg [3:0] count [0:15];     //this counts the number of elements filled in 'connected' and 'weights' arrays
     integer i=0;
     integer j=0;
     always @(posedge clk or reset==1'b0)
@@ -310,6 +313,10 @@ module Djikstra
                 inp[254]<=data[3059:3048];
                 inp[255]<=data[3071:3060];
                 //input copying end
+                state=2;
+            end
+            if(state==2) begin
+                
             end
         end 
     end  
