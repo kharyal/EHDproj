@@ -316,7 +316,13 @@ module Djikstra
                 state=2;
             end
             if(state==2) begin
-                
+                if(inp[0]!=0)begin
+                    connected[inp[0][3:0]-1]<=connected[inp[0][3:0]-1]+inp[0][7:4]<<count[0];
+                    connected[inp[0][7:4]-1]<=connected[inp[0][7:4]-1]+inp[0][3:0]<<count[0];
+                    weights[inp[0][3:0]-1]<=weights[inp[0][3:0]-1]+inp[0][11:8]<<count[0];
+                    weights[inp[0][7:4]-1]<=weights[inp[0][7:4]-1]+inp[0][11:8]<<count[0];
+                    count[0]<=count[0]+1;
+                end
             end
         end 
     end  
