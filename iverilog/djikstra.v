@@ -42,6 +42,7 @@ module Djikstra
     output reg valid_out
 );
     reg [3:0] hp [0:15];     //heap
+    reg [3:0] parallel_hp [0:15];
     reg [3:0] len;           //length of heap at any given time
     reg [31:0] state;        
     reg [3:0] nn;            //number of nodes
@@ -51,6 +52,7 @@ module Djikstra
     reg [3:0] weights [0:15];
     reg [3:0] count [0:15];     //this counts the number of elements filled in 'connected' and 'weights' arrays
     reg [3:0] edgcnt;
+    reg [8:0] shortest [0:15];    
     integer i=0;
     integer j=0;
 //    integer count [0:15];
@@ -339,13 +341,23 @@ module Djikstra
                     weights[inp[edgcnt][7:4]-1]<=weights[inp[edgcnt][7:4]-1]+inp[edgcnt][11:8]<<count[inp[edgcnt][7:4]-1];
                     count[inp[edgcnt][3:0]-1]=count[inp[edgcnt][3:0]-1]+1;
                     count[inp[edgcnt][7:4]-1]=count[inp[edgcnt][7:4]-1]+1;
+                    edgcnt<=edgcnt+1;
                 end
             //end of making adjecency list
                 else 
                     state<=3;
             end
+            
             if(state==3) begin  //yo yo dijkstra
-
+                
+            end
+            
+            if(state==4) begin  //handles heap
+            
+            end
+            
+            if(state==5)begin   //output state
+            
             end
         end 
     end  
