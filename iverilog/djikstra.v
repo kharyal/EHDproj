@@ -8,7 +8,7 @@ module top(
     output reg [4096:0] sp,   
     output reg valid_out 
 );
-    Djikstra d(.n(inp[3:0]), .e(inp[11:4]), .data(inp[3083:12]), .clk(clk), .reset(reset), .valid(valid), .ready(ready), .hold(hold));
+    Dijkstra d(.n(inp[3:0]), .e(inp[11:4]), .data(inp[3083:12]), .clk(clk), .reset(reset), .valid(valid), .ready(ready), .hold(hold));
 endmodule
 /*
     module for Dijkstra:
@@ -27,7 +27,7 @@ endmodule
                 shortest path of each node from node 0
     other inputs and outputs are self explainatory
 */
-module Djikstra
+module Dijkstra
 (
     input [3:0] n,
     input [7:0] e,
@@ -41,21 +41,21 @@ module Djikstra
     output reg [4096:0] sp,   
     output reg valid_out
 );
-    reg [3:0] hp [0:15];     //heap
-    reg [3:0] parallel_hp [0:15];
+    reg [3:0] hp [0:15];     //heap (starts from index 1),(stores weights)
+    reg [3:0] parallel_hp [0:15]; //stores corresponding nodes
     reg [3:0] len;           //length of heap at any given time
     reg [31:0] state;        
     reg [3:0] nn;            //number of nodes
     reg [7:0] ee;            //number of edges
     reg [11:0] inp [0:255];  // this is input
-    reg [3:0] connected [0:15]; 
-    reg [3:0] weights [0:15];
+    reg [3:0] connected [0:15]; //stores all the nodes connected to (index+1)th node
+    reg [3:0] weights [0:15];   //stores the weights of corresponding edges 
     reg [3:0] count [0:15];     //this counts the number of elements filled in 'connected' and 'weights' arrays
-    reg [3:0] edgcnt;
-    reg [9:0] shortest [0:15];
-    reg visited [0:15];
-    reg [3:0] selected;
-    reg [3:0] child;    
+    reg [3:0] edgcnt;           //used in making adjecency list
+    reg [9:0] shortest [0:15];  //this stores shortest path from source node to (index+1)th node
+    reg visited [0:15];         //If the node is visited or not during dijkstra
+    reg [3:0] selected;         //node selected from min heap
+    reg [3:0] child;            //child of node selected from min heap
     integer i=0;
     integer j=0;
 //    integer count [0:15];
@@ -362,13 +362,13 @@ module Djikstra
             end
             
             if(state==31 || state==32) begin  //yo yo dijkstra
-                if(state==31) begin
+                if(state==31) begin           //for selecting min element from min heap
                     selected<=parallel_hp[1];
                 end
                 else begin
-                    if(count[selected-1]>0) begin
+                    if(count[selected-4'b0001]>0) begin
                     //how to resolve error in this line??
-                        child<=connected[selected-1][3*count[selected-1]+3:3*count[selected-1]];
+                        child<=connected[selected-4'b0001][3*count[selected-4'b0001]+3:3*count[selected-4'b0001]];
                     end
                 end
             end
