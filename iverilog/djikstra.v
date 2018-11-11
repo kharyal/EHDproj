@@ -52,7 +52,10 @@ module Djikstra
     reg [3:0] weights [0:15];
     reg [3:0] count [0:15];     //this counts the number of elements filled in 'connected' and 'weights' arrays
     reg [3:0] edgcnt;
-    reg [8:0] shortest [0:15];    
+    reg [9:0] shortest [0:15];
+    reg visited [0:15];
+    reg [3:0] selected;
+    reg [3:0] child;    
     integer i=0;
     integer j=0;
 //    integer count [0:15];
@@ -60,13 +63,19 @@ module Djikstra
     begin
         if (reset==1'b0) begin          //reset
             for(i=0;i<16;i=i+1) begin
-                hp[i]<=3'b000;
+                hp[i]<=4'b000;
+                parallel_hp[i]<=4'b000;
+                shortest[i]<=10'b1000000000;
+                visited[i]<=0;
             end
             valid_out<=1'b0;
             sp<=0;
             len<=0;
             state<=0;
             edgcnt<=4'b0000;
+            for(i=0;i<16;i=i+1) begin
+                connected[i]<=4'b000;
+            end
         end
         else begin
             if(state==0) begin
@@ -335,21 +344,33 @@ module Djikstra
             if(state==2) begin //state for making adjecency list
             //start of making adjecency list
                 if (edgcnt<ee)begin
-                    connected[inp[edgcnt][3:0]-1]<=connected[inp[edgcnt][3:0]-1]+inp[edgcnt][7:4]<<count[inp[edgcnt][3:0]-1];
-                    connected[inp[edgcnt][7:4]-1]<=connected[inp[edgcnt][7:4]-1]+inp[edgcnt][3:0]<<count[inp[edgcnt][7:4]-1];
-                    weights[inp[edgcnt][3:0]-1]<=weights[inp[edgcnt][3:0]-1]+inp[edgcnt][11:8]<<count[inp[edgcnt][3:0]-1];
-                    weights[inp[edgcnt][7:4]-1]<=weights[inp[edgcnt][7:4]-1]+inp[edgcnt][11:8]<<count[inp[edgcnt][7:4]-1];
-                    count[inp[edgcnt][3:0]-1]=count[inp[edgcnt][3:0]-1]+1;
-                    count[inp[edgcnt][7:4]-1]=count[inp[edgcnt][7:4]-1]+1;
+                    connected[inp[edgcnt][3:0]-1]<=connected[inp[edgcnt][3:0]-1]+inp[edgcnt][7:4]<<3*count[inp[edgcnt][3:0]-1];
+                    connected[inp[edgcnt][7:4]-1]<=connected[inp[edgcnt][7:4]-1]+inp[edgcnt][3:0]<<3*count[inp[edgcnt][7:4]-1];
+                    weights[inp[edgcnt][3:0]-1]<=weights[inp[edgcnt][3:0]-1]+inp[edgcnt][11:8]<<4*count[inp[edgcnt][3:0]-1];
+                    weights[inp[edgcnt][7:4]-1]<=weights[inp[edgcnt][7:4]-1]+inp[edgcnt][11:8]<<4*count[inp[edgcnt][7:4]-1];
+                    count[inp[edgcnt][3:0]-1]<=count[inp[edgcnt][3:0]-1]+1;
+                    count[inp[edgcnt][7:4]-1]<=count[inp[edgcnt][7:4]-1]+1;
                     edgcnt<=edgcnt+1;
                 end
             //end of making adjecency list
-                else 
-                    state<=3;
+                else begin
+                    shortest[0]<=0;    
+                    hp[1]<=0;
+                    parallel_hp[1]<=1;
+                    state<=31;
+                end
             end
             
-            if(state==3) begin  //yo yo dijkstra
-                
+            if(state==31 || state==32) begin  //yo yo dijkstra
+                if(state==31) begin
+                    selected<=parallel_hp[1];
+                end
+                else begin
+                    if(count[selected-1]>0) begin
+                    //how to resolve error in this line??
+                        child<=connected[selected-1][3*count[selected-1]+3:3*count[selected-1]];
+                    end
+                end
             end
             
             if(state==4) begin  //handles heap
