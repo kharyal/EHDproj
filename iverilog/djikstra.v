@@ -80,7 +80,7 @@ module Dijkstra
     ready,
     hold,
 
-    output reg [4096:0] sp,   
+    output reg [145:0] sp,   
     output reg valid_out
 );
     reg [3:0] hp [0:15];     //heap (starts from index 1),(stores weights)
@@ -462,6 +462,9 @@ division d(.A(index), .B(2), .Res(ind_div_res));
                                 count[selected]<=count[selected]-1;
                             end 
                         end
+                        else begin
+                            state<=31;
+                        end
                     end
                 end
                 else
@@ -469,13 +472,13 @@ division d(.A(index), .B(2), .Res(ind_div_res));
             end
             
             else if(state==41||state==42||state==43||state==44) begin  //handles heap
-                if(state==41) begin
+                if(state==41) begin        //siftup
                     hp[1]<=hp[len];
                     parallel_hp[1]<=parallel_hp[len];
                     index<=1;
                     state<=42;
                 end
-                else if(state<=42)begin
+                else if(state<=42)begin   //siftup
                     if(2*index+1<len && (hp[index]>hp[2*index+1] || hp[index]>hp[2*index]))begin
                         if(hp[2*index+1]>hp[2*index])begin
                             hp[index]<=hp[2*index];
@@ -492,7 +495,7 @@ division d(.A(index), .B(2), .Res(ind_div_res));
                             index<=2*index+1;
                         end
                     end
-                    else if(2*index<len && hp[index]>hp[2*index])begin
+                    else if(2*index<len && hp[index]>hp[2*index])begin   
                         hp[index]<=hp[2*index];
                         parallel_hp[index]<=parallel_hp[2*index];
                         hp[2*index]<=hp[index];
@@ -502,13 +505,14 @@ division d(.A(index), .B(2), .Res(ind_div_res));
                     else
                         state<=32;
                 end
-                else if(state==43) begin
-                    hp[len+1]<=child[selected];
+                else if(state==43) begin     //siftDown
+                    hp[len+1]<=child_wt[selected];
+                    parallel_hp[len+1]<=child[selected];
                     len<=len+1;
                     index<=len+1;
                     state<=44;
                 end
-                else if(state==44) begin
+                else if(state==44) begin    //siftDown
                     if(ind_div_res>1 && hp[ind_div_res]>hp[index]) begin
                         hp[ind_div_res]<=hp[index];
                         parallel_hp[ind_div_res]<=hp[index];
@@ -516,12 +520,32 @@ division d(.A(index), .B(2), .Res(ind_div_res));
                         parallel_hp[index]<=hp[ind_div_res];
                         index<=ind_div_res;
                     end
-                    count[selected]=count[selected]-1;
+                    else begin
+                        count[selected]=count[selected]-1;
+                        state<=32;
+                    end
                 end            
             end
             
             if(state==5)begin   //output state
-
+                sp[8:0]<=shortest[0];
+                sp[17:9]<=shortest[1];
+                sp[26:18]<=shortest[2];
+                sp[35:27]<=shortest[3];
+                sp[44:36]<=shortest[4];
+                sp[53:45]<=shortest[5];
+                sp[62:54]<=shortest[6];
+                sp[71:63]<=shortest[7];
+                sp[80:72]<=shortest[8];
+                sp[89:81]<=shortest[9];
+                sp[98:90]<=shortest[10];
+                sp[107:99]<=shortest[11];
+                sp[116:108]<=shortest[12];
+                sp[125:117]<=shortest[13];
+                sp[134:126]<=shortest[14];
+                sp[143:135]<=shortest[15];
+                valid_out<=1'b1;
+                state<=0;
             end
         end 
     end  
