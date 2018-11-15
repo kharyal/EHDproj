@@ -10,6 +10,10 @@ module top(
 );
     Dijkstra d(.n(inp[3:0]), .e(inp[11:4]), .data(inp[3083:12]), .clk(clk), .reset(reset), .valid(valid), .ready(ready), .hold(hold));
 endmodule
+
+module sel_child(input [59:0] con, input [3:0] sel, output [3:0]child);
+    assign child={con[3*sel+3], con[3*sel+2], con[3*sel+1], con[3*sel]};
+endmodule
 /*
     module for Dijkstra:
 
@@ -48,16 +52,37 @@ module Dijkstra
     reg [3:0] nn;            //number of nodes
     reg [7:0] ee;            //number of edges
     reg [11:0] inp [0:255];  // this is input
-    reg [3:0] connected [0:15]; //stores all the nodes connected to (index+1)th node
-    reg [3:0] weights [0:15];   //stores the weights of corresponding edges 
+    reg [59:0] connected [0:15]; //stores all the nodes connected to (index+1)th node
+    reg [59:0] weights [0:15];   //stores the weights of corresponding edges 
     reg [3:0] count [0:15];     //this counts the number of elements filled in 'connected' and 'weights' arrays
     reg [3:0] edgcnt;           //used in making adjecency list
     reg [9:0] shortest [0:15];  //this stores shortest path from source node to (index+1)th node
     reg visited [0:15];         //If the node is visited or not during dijkstra
     reg [3:0] selected;         //node selected from min heap
-    reg [3:0] child;            //child of node selected from min heap
+    wire [3:0] child[0:15];
     integer i=0;
     integer j=0;
+
+// instansiating child selection module
+sel_child s0(.con(connected[0]), .sel(count[0]), .child(child[0]));
+sel_child s1(.con(connected[1]), .sel(count[1]), .child(child[1]));
+sel_child s2(.con(connected[2]), .sel(count[2]), .child(child[2]));
+sel_child s3(.con(connected[3]), .sel(count[3]), .child(child[3]));
+sel_child s4(.con(connected[4]), .sel(count[4]), .child(child[4]));
+sel_child s5(.con(connected[5]), .sel(count[5]), .child(child[5]));
+sel_child s6(.con(connected[6]), .sel(count[6]), .child(child[6]));
+sel_child s7(.con(connected[7]), .sel(count[7]), .child(child[7]));
+sel_child s8(.con(connected[8]), .sel(count[8]), .child(child[8]));
+sel_child s9(.con(connected[9]), .sel(count[9]), .child(child[9]));
+sel_child s10(.con(connected[10]), .sel(count[10]), .child(child[10]));
+sel_child s11(.con(connected[11]), .sel(count[11]), .child(child[11]));
+sel_child s12(.con(connected[12]), .sel(count[12]), .child(child[12]));
+sel_child s13(.con(connected[13]), .sel(count[13]), .child(child[13]));
+sel_child s14(.con(connected[14]), .sel(count[14]), .child(child[14]));
+sel_child s15(.con(connected[15]), .sel(count[15]), .child(child[15]));
+
+
+
 //    integer count [0:15];
     always @(posedge clk or reset==1'b0)
     begin
@@ -367,8 +392,7 @@ module Dijkstra
                 end
                 else begin
                     if(count[selected-4'b0001]>0) begin
-                    //how to resolve error in this line??
-                        child<=connected[selected-4'b0001][3*count[selected-4'b0001]+3:3*count[selected-4'b0001]];
+                        
                     end
                 end
             end
