@@ -419,7 +419,7 @@ sel_weight w15(.con(weights[15]), .sel(count[15]), .wt(child_wt[15]));
                             if(visited[child[selected]-1]==0)begin
                                 if(shortest[child[selected]-1]>shortest[selected]+child_wt[selected])begin
                                     shortest[child[selected]-1]<=shortest[selected]+child_wt[selected];
-                                    state<=4;
+                                    state<=43;
                                 end
                             end
                             else begin
@@ -467,7 +467,7 @@ sel_weight w15(.con(weights[15]), .sel(count[15]), .wt(child_wt[15]));
                         state<=32;
                 end
                 if(state==43) begin
-                
+                    
                 end            
             end
             
