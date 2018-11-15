@@ -14,6 +14,9 @@ endmodule
 module sel_child(input [59:0] con, input [3:0] sel, output [3:0]child);
     assign child={con[3*sel+3], con[3*sel+2], con[3*sel+1], con[3*sel]};
 endmodule
+module sel_weight(input [59:0] con, input [3:0] sel, output [3:0]wt);
+    assign wt={con[3*sel+3], con[3*sel+2], con[3*sel+1], con[3*sel]};
+endmodule
 /*
     module for Dijkstra:
 
@@ -47,7 +50,7 @@ module Dijkstra
 );
     reg [3:0] hp [0:15];     //heap (starts from index 1),(stores weights)
     reg [3:0] parallel_hp [0:15]; //stores corresponding nodes
-    reg [3:0] len;           //length of heap at any given time
+    reg [31:0] len;           //length of heap at any given time
     reg [31:0] state;        
     reg [3:0] nn;            //number of nodes
     reg [7:0] ee;            //number of edges
@@ -60,10 +63,12 @@ module Dijkstra
     reg visited [0:15];         //If the node is visited or not during dijkstra
     reg [3:0] selected;         //node selected from min heap
     wire [3:0] child[0:15];
+    wire [3:0] child_wt[0:15];
+    reg [31:0] index;
     integer i=0;
     integer j=0;
 
-// instansiating child selection module
+// instansiating child and weight selection module
 sel_child s0(.con(connected[0]), .sel(count[0]), .child(child[0]));
 sel_child s1(.con(connected[1]), .sel(count[1]), .child(child[1]));
 sel_child s2(.con(connected[2]), .sel(count[2]), .child(child[2]));
@@ -81,6 +86,23 @@ sel_child s13(.con(connected[13]), .sel(count[13]), .child(child[13]));
 sel_child s14(.con(connected[14]), .sel(count[14]), .child(child[14]));
 sel_child s15(.con(connected[15]), .sel(count[15]), .child(child[15]));
 
+sel_weight w0(.con(weights[0]), .sel(count[0]), .wt(child_wt[0]));
+sel_weight w1(.con(weights[1]), .sel(count[1]), .wt(child_wt[1]));
+sel_weight w2(.con(weights[2]), .sel(count[2]), .wt(child_wt[2]));
+sel_weight w3(.con(weights[3]), .sel(count[3]), .wt(child_wt[3]));
+sel_weight w4(.con(weights[4]), .sel(count[4]), .wt(child_wt[4]));
+sel_weight w5(.con(weights[5]), .sel(count[5]), .wt(child_wt[5]));
+sel_weight w6(.con(weights[6]), .sel(count[6]), .wt(child_wt[6]));
+sel_weight w7(.con(weights[7]), .sel(count[7]), .wt(child_wt[7]));
+sel_weight w8(.con(weights[8]), .sel(count[8]), .wt(child_wt[8]));
+sel_weight w9(.con(weights[9]), .sel(count[9]), .wt(child_wt[9]));
+sel_weight w10(.con(weights[10]), .sel(count[10]), .wt(child_wt[10]));
+sel_weight w11(.con(weights[11]), .sel(count[11]), .wt(child_wt[11]));
+sel_weight w12(.con(weights[12]), .sel(count[12]), .wt(child_wt[12]));
+sel_weight w13(.con(weights[13]), .sel(count[13]), .wt(child_wt[13]));
+sel_weight w14(.con(weights[14]), .sel(count[14]), .wt(child_wt[14]));
+sel_weight w15(.con(weights[15]), .sel(count[15]), .wt(child_wt[15]));
+
 
 
 //    integer count [0:15];
@@ -95,7 +117,7 @@ sel_child s15(.con(connected[15]), .sel(count[15]), .child(child[15]));
             end
             valid_out<=1'b0;
             sp<=0;
-            len<=0;
+            len<=1;
             state<=0;
             edgcnt<=4'b0000;
             for(i=0;i<16;i=i+1) begin
@@ -366,7 +388,7 @@ sel_child s15(.con(connected[15]), .sel(count[15]), .child(child[15]));
                 //input copying end
                 state=2;
             end
-            if(state==2) begin //state for making adjecency list
+            else if(state==2) begin   //state for making adjecency list
             //start of making adjecency list
                 if (edgcnt<ee)begin
                     connected[inp[edgcnt][3:0]-1]<=connected[inp[edgcnt][3:0]-1]+inp[edgcnt][7:4]<<3*count[inp[edgcnt][3:0]-1];
@@ -386,23 +408,71 @@ sel_child s15(.con(connected[15]), .sel(count[15]), .child(child[15]));
                 end
             end
             
-            if(state==31 || state==32) begin  //yo yo dijkstra
-                if(state==31) begin           //for selecting min element from min heap
-                    selected<=parallel_hp[1];
-                end
-                else begin
-                    if(count[selected-4'b0001]>0) begin
-                        
+            else if(state==31 || state==32) begin  //yo yo dijkstra
+                if (len>0) begin
+                    if(state==31) begin           //for selecting min element from min heap
+                        selected<=parallel_hp[1]-4'b0001;
+                        state<=41;
+                    end
+                    else begin
+                        if(count[selected]>=0) begin
+                            if(visited[child[selected]-1]==0)begin
+                                if(shortest[child[selected]-1]>shortest[selected]+child_wt[selected])begin
+                                    shortest[child[selected]-1]<=shortest[selected]+child_wt[selected];
+                                    state<=4;
+                                end
+                            end
+                            else begin
+                                count[selected]<=count[selected]-1;
+                            end 
+                        end
                     end
                 end
+                else
+                    state<=5;
             end
             
-            if(state==4) begin  //handles heap
-            
+            else if(state==41||state==42||state==43) begin  //handles heap
+                if(state==41) begin
+                    hp[1]<=hp[len];
+                    parallel_hp[1]<=parallel_hp[len];
+                    index<=1;
+                    state<=42;
+                end
+                else if(state<=42)begin
+                    if(2*index+1<len && (hp[index]>hp[2*index+1] || hp[index]>hp[2*index]))begin
+                        if(hp[2*index+1]>hp[2*index])begin
+                            hp[index]<=hp[2*index];
+                            parallel_hp[index]<=parallel_hp[2*index];
+                            hp[2*index]<=hp[index];
+                            parallel_hp[2*index]<=parallel_hp[index];
+                            index<=2*index;
+                        end
+                        else begin
+                            hp[index]<=hp[2*index+1];
+                            parallel_hp[index]<=parallel_hp[2*index+1];
+                            hp[2*index+1]<=hp[index];
+                            parallel_hp[2*index+1]<=parallel_hp[index];
+                            index<=2*index+1;
+                        end
+                    end
+                    else if(2*index<len && hp[index]>hp[2*index])begin
+                        hp[index]<=hp[2*index];
+                        parallel_hp[index]<=parallel_hp[2*index];
+                        hp[2*index]<=hp[index];
+                        parallel_hp[2*index]<=parallel_hp[index];
+                        index<=2*index;
+                    end
+                    else
+                        state<=32;
+                end
+                if(state==43) begin
+                
+                end            
             end
             
             if(state==5)begin   //output state
-            
+
             end
         end 
     end  
