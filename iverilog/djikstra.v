@@ -14,8 +14,43 @@ endmodule
 module sel_child(input [59:0] con, input [3:0] sel, output [3:0]child);
     assign child={con[3*sel+3], con[3*sel+2], con[3*sel+1], con[3*sel]};
 endmodule
+
 module sel_weight(input [59:0] con, input [3:0] sel, output [3:0]wt);
     assign wt={con[3*sel+3], con[3*sel+2], con[3*sel+1], con[3*sel]};
+endmodule
+
+module division(A,B,Res);
+
+    //the size of input and output ports of the division module is generic.
+    parameter WIDTH = 32;
+    //input and output ports.
+    input [WIDTH-1:0] A;
+    input [WIDTH-1:0] B;
+    output [WIDTH-1:0] Res;
+    //internal variables    
+    reg [WIDTH-1:0] Res = 0;
+    reg [WIDTH-1:0] a1,b1;
+    reg [WIDTH:0] p1;   
+    integer i;
+
+    always@ (A or B)
+    begin
+        //initialize the variables.
+        a1 = A;
+        b1 = B;
+        p1= 0;
+        for(i=0;i < WIDTH;i=i+1)    begin //start the for loop
+            p1 = {p1[WIDTH-2:0],a1[WIDTH-1]};
+            a1[WIDTH-1:1] = a1[WIDTH-2:0];
+            p1 = p1-b1;
+            if(p1[WIDTH-1] == 1)    begin
+                a1[0] = 0;
+                p1 = p1 + b1;   end
+            else
+                a1[0] = 1;
+        end
+        Res = a1;   
+    end 
 endmodule
 /*
     module for Dijkstra:
@@ -65,6 +100,7 @@ module Dijkstra
     wire [3:0] child[0:15];
     wire [3:0] child_wt[0:15];
     reg [31:0] index;
+    wire [31:0] ind_div_res;
     integer i=0;
     integer j=0;
 
@@ -103,7 +139,7 @@ sel_weight w13(.con(weights[13]), .sel(count[13]), .wt(child_wt[13]));
 sel_weight w14(.con(weights[14]), .sel(count[14]), .wt(child_wt[14]));
 sel_weight w15(.con(weights[15]), .sel(count[15]), .wt(child_wt[15]));
 
-
+division d(.A(index), .B(2), .Res(ind_div_res));
 
 //    integer count [0:15];
     always @(posedge clk or reset==1'b0)
@@ -432,7 +468,7 @@ sel_weight w15(.con(weights[15]), .sel(count[15]), .wt(child_wt[15]));
                     state<=5;
             end
             
-            else if(state==41||state==42||state==43) begin  //handles heap
+            else if(state==41||state==42||state==43||state==44) begin  //handles heap
                 if(state==41) begin
                     hp[1]<=hp[len];
                     parallel_hp[1]<=parallel_hp[len];
@@ -466,8 +502,21 @@ sel_weight w15(.con(weights[15]), .sel(count[15]), .wt(child_wt[15]));
                     else
                         state<=32;
                 end
-                if(state==43) begin
-                    
+                else if(state==43) begin
+                    hp[len+1]<=child[selected];
+                    len<=len+1;
+                    index<=len+1;
+                    state<=44;
+                end
+                else if(state==44) begin
+                    if(ind_div_res>1 && hp[ind_div_res]>hp[index]) begin
+                        hp[ind_div_res]<=hp[index];
+                        parallel_hp[ind_div_res]<=hp[index];
+                        hp[index]<=hp[ind_div_res];
+                        parallel_hp[index]<=hp[ind_div_res];
+                        index<=ind_div_res;
+                    end
+                    count[selected]=count[selected]-1;
                 end            
             end
             
